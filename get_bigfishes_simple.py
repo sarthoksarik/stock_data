@@ -27,7 +27,9 @@ session = HTMLSession()
 # resp["quoteResponse"]["result"][0]["marketCap"] is the market capital
 # resp["quoteResponse"]["result"][0]["symbol"] is the symbor or ticker
 input_file = "all_tickers.csv"
+output_file = "sym_marketcap_sim.csv"
 sym_list = []
+err_json = {}
 with open(input_file) as inputcsv:
     symreader = csv.reader(inputcsv)
     for row in symreader:
@@ -43,7 +45,13 @@ for sym in sym_list:
     try:
         c1 = resp["quoteResponse"]["result"][0]["marketCap"]
         c2 = resp["quoteResponse"]["result"][0]["symbol"]
-    except KeyError:
+    except (KeyError, IndexError):
         c1 = ""
         c2 = symbols
+        err_json.update({sym: resp})
     sym_cap_list.append([c2, c1])
+    with open(output_file, "w", newline="") as of:
+        ofwriter = csv.writer(of)
+        ofwriter.writerows(sym_cap_list)
+with open("err.json", "a") as ef:
+    ef.write(json.dumps(err_json))
